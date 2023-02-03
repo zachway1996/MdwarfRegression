@@ -113,6 +113,9 @@ from sklearn.metrics import mean_squared_error
 # Set input and output data
 X = rpc
 y = np.array(data[["absG", "g_rp"]])
+absGmean, absGstd = np.mean(y.T[0]), np.std(y.T[0])
+g_rpmean, g_rpstd = np.mean(y.T[1]), np.std(y.T[1])
+y= np.array([(y.T[0] - absGmean)/absGstd , (y.T[1] - g_rpmean)/g_rpstd]).T
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=42)
 
 # Set depth and train
@@ -124,6 +127,10 @@ rf = RandomForestRegressor(n_estimators = Nest, max_features = 'sqrt', max_depth
 #Save RF model
 with open("single_rf.pkl", 'wb') as pickle_file:
     pickle.dump(rf, pickle_file)
+
+prediction = rf.predict(X_test)
+prediction = np.array([prediction.T[0]*absGstd + absGmean,  \
+                        prediction.T[1]*g_rpstd + g_rpmean])
 
 # Plot prediction
 fig = plt.figure(figsize=(12,4))
