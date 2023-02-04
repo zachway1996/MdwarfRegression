@@ -122,7 +122,7 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random
 depth = 30
 Nest = 20
 rf = RandomForestRegressor(n_estimators = Nest, max_features = 'sqrt', max_depth = depth,
-                           random_state = 18).fit(X_train, y_train)
+                           random_state = 18, n_jobs=-1).fit(X_train, y_train)
 
 #Save RF model
 with open("single_rf.pkl", 'wb') as pickle_file:
