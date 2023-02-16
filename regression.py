@@ -3,7 +3,6 @@
 import numpy as np
 from astropy.io.votable import parse
 from astropy.table import Table
-import pandas as pd
 import matplotlib.pyplot as plt
 import gaiaxpy
 from gaiaxpy.converter.converter import get_design_matrices
@@ -14,8 +13,11 @@ from tqdm import tqdm
 from os import path
 import mpl_scatter_density
 from corner import corner
-import xgboost as xgb
+#import xgboost as xgb
 import pickle
+import pandas as pd
+from astropy.visualization.mpl_normalize import ImageNormalize
+from astropy.visualization import LogStretch
 
 print("Loading XP spec...")
 temp = parse("XP_CONTINUOUS_COMBINED.xml_Gaia_DR3.vot")
@@ -54,6 +56,7 @@ data[["source_id"]].to_csv("source_ids.csv", index=False)
 extra_data = pd.read_csv("regression_xp_info-result.csv")
 df = df.merge(extra_data)
 
+print("Length of df is", len(df))
 ###
 
 fig = plt.figure(figsize=(12,6))
@@ -81,7 +84,7 @@ ax4.axvline(0.9, color="black")
 for ax in [ax1,ax2]:
     ax.set_xlabel("Right Ascension")
     ax.set_ylabel("Declination")
-plt.tight_layout()
+#plt.tight_layout()
 plt.savefig("quality_test.png", dpi=150, transparent=False, facecolor="white")
 plt.close()
 
@@ -128,9 +131,17 @@ rf = RandomForestRegressor(n_estimators = Nest, max_features = 'sqrt', max_depth
 with open("single_rf.pkl", 'wb') as pickle_file:
     pickle.dump(rf, pickle_file)
 
+print("X_test shape is", X_test.shape)
+
 prediction = rf.predict(X_test)
 prediction = np.array([prediction.T[0]*absGstd + absGmean,  \
-                        prediction.T[1]*g_rpstd + g_rpmean])
+                        prediction.T[1]*g_rpstd + g_rpmean]).T
+
+y_train = np.array([y_train.T[0]*absGstd + absGmean,  \
+                        y_train.T[1]*g_rpstd + g_rpmean]).T
+
+y_test = np.array([y_test.T[0]*absGstd + absGmean,  \
+                        y_test.T[1]*g_rpstd + g_rpmean]).T
 
 # Plot prediction
 fig = plt.figure(figsize=(12,4))
@@ -155,7 +166,7 @@ for ax in [ax1,ax2,ax3]:
     ax.invert_yaxis()
     ax.set_ylabel("M_G")
     ax.set_xlabel("G-RP")
-plt.tight_layout()
+#plt.tight_layout()
 plt.savefig("random_forest.png", dpi=200, facecolor="white", transparent=False)
 plt.close()
 
@@ -197,6 +208,6 @@ ax4.set_xlabel("G-RP (mag)")
 ax4.set_ylabel(r"$\Delta~M_G$ (mag)")
 
 
-plt.tight_layout()
+#plt.tight_layout()
 plt.savefig("AAS_4x4.png", transparent=False, facecolor="white", dpi=150)
 plt.close()
