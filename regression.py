@@ -116,10 +116,13 @@ from sklearn.metrics import mean_squared_error
 # Set input and output data
 X = rpc
 y = np.array(data[["absG", "g_rp"]])
+X_train, X_test, i_train, i_test = train_test_split(X, data.index, test_size=0.33, random_state=42)
+y_train = np.array(data.loc[np.array(i_train), ["absG", "g_rp"]])
+y_test  = np.array(data.loc[np.array(i_test), ["absG", "g_rp"]])
 absGmean, absGstd = np.mean(y.T[0]), np.std(y.T[0])
 g_rpmean, g_rpstd = np.mean(y.T[1]), np.std(y.T[1])
-y= np.array([(y.T[0] - absGmean)/absGstd , (y.T[1] - g_rpmean)/g_rpstd]).T
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=42)
+y_train = np.array([(y_train.T[0] - absGmean)/absGstd , (y_train.T[1] - g_rpmean)/g_rpstd]).T
+y_test = np.array([(y_test.T[0] - absGmean)/absGstd , (y_test.T[1] - g_rpmean)/g_rpstd]).T
 
 # Set depth and train
 depth = 30
@@ -211,3 +214,15 @@ ax4.set_ylabel(r"$\Delta~M_G$ (mag)")
 #plt.tight_layout()
 plt.savefig("AAS_4x4.png", transparent=False, facecolor="white", dpi=150)
 plt.close()
+
+
+new_df = pd.DataFrame()
+new_df['train'] = np.concatenate([np.ones(len(y_train), dtype=bool), np.zeros(len(y_test), dtype=bool)])
+new_df["absG"] = np.concatenate([y_train.T[0], y_test.T[0]])
+new_df["g_rp"] = np.concatenate([y_train.T[1], y_test.T[1]])
+train_pred = rf.predict(X_train)
+new_df["p_absG"] = np.concatenate([train_pred.T[0]*absGstd + absGmean, prediction.T[0]])
+new_df["p_g_rp"] = np.concatenate([train_pred.T[1]*g_rpstd + g_rpmean, prediction.T[1]])
+new_df["source_id"] = np.concatenate([data.loc[np.array(i_train), "source_id"], data.loc[np.array(i_test), "source_id"]])
+new_df.to_csv("rf_results.csv")
+
