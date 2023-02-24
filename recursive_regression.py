@@ -183,15 +183,16 @@ for i_ in tqdm(range(10)):
         msk = new_df.source_id==row.source_id
         if np.sum(msk)==0:
             k_.append(False)
-        try:
-            foo = new_df.loc[msk]
-            test_val = foo.p_absG - foo.absG
-            if float(test_val) >0.6:
+        else:
+            try:
+                foo = new_df.loc[msk]
+                test_val = foo.p_absG - foo.absG
+                if float(test_val) >0.6:
+                    k_.append(False)
+                else:
+                    k_.append(True)
+            except:
                 k_.append(False)
-            else:
-                k_.append(True)
-        except:
-            k_.append(False)
     print(len(k_))
     print(len(data))
     print(len(rpc))
