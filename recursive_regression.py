@@ -103,7 +103,7 @@ for i_ in tqdm(range(10)):
     depth = 30
     Nest = 20
     rf = RandomForestRegressor(n_estimators = Nest, max_features = 'sqrt', max_depth = depth,
-                           random_state = 18, n_jobs=-1).fit(X_train, y_train)
+                           random_state = np.random.randint(1,1e14), n_jobs=-1).fit(X_train, y_train)
     
     #Save RF model
     with open("single_rf%s.pkl"%(str(i_)), 'wb') as pickle_file:
@@ -179,6 +179,7 @@ for i_ in tqdm(range(10)):
         continue
 
     k_ = []
+    std_temp = np.std(new_df.p_absG - new_df.absG)
     for j,row in tqdm(data.iterrows()):
         msk = new_df.source_id==row.source_id
         if np.sum(msk)==0:
@@ -187,7 +188,7 @@ for i_ in tqdm(range(10)):
             try:
                 foo = new_df.loc[msk]
                 test_val = foo.p_absG - foo.absG
-                if float(test_val) >0.6:
+                if float(test_val) >3*std_temp: #0.6
                     k_.append(False)
                 else:
                     k_.append(True)
